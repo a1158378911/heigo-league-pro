@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEIGO 足球经理联赛管理系统</title>
+    <style>
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a3e;
+            --bg-card: #252550;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --accent: #00d4aa;
+            --accent-hover: #00b894;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --danger: #ff4466;
+            --border: #333355;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 2px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--accent); }
+        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-btn:hover, .nav-btn.active { background: var(--accent); border-color: var(--accent); color: #000; }
+
+        /* 主容器 */
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* 卡片 */
+        .card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--accent);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        /* 表格 */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: var(--bg-secondary); color: var(--accent); font-weight: 600; }
+        tr:hover { background: var(--bg-secondary); }
+        .rank-1 { color: #ffd700; font-weight: bold; }
+        .rank-2 { color: #c0c0c0; font-weight: bold; }
+        .rank-3 { color: #cd7f32; font-weight: bold; }
+
+        /* 表单 */
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); }
+        input, select, textarea {
+            width: 100%; padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+
+        /* 按钮 */
+        .btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        .btn-secondary { background: var(--bg-secondary); color: var(--text-primary); }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-block { width: 100%; }
+
+        /* 网格 */
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+
+        /* 统计卡片 */
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .stat-value { font-size: 2.5rem; font-weight: bold; color: var(--accent); }
+        .stat-label { color: var(--text-secondary); margin-top: 0.5rem; }
+
+        /* 徽章 */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .badge-s { background: #ffd700; color: #000; }
+        .badge-a { background: #c0c0c0; color: #000; }
+        .badge-b { background: #cd7f32; color: #fff; }
+        .badge-c { background: #8b4513; color: #fff; }
+        .badge-pending { background: var(--warning); color: #000; }
+        .badge-confirmed { background: var(--success); color: #000; }
+
+        /* 消息提示 */
+        .alert {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .alert-success { background: rgba(0, 255, 136, 0.15); border: 1px solid var(--success); color: var(--success); }
+        .alert-error { background: rgba(255, 68, 102, 0.15); border: 1px solid var(--danger); color: var(--danger); }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; align-items: flex-start; }
+            .nav-links { width: 100%; justify-content: space-between; }
+            .container { padding: 1rem; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="logo">⚽ HEIGO 联赛管理系统</div>
+        <div class="nav-links">
+            <button class="nav-btn active" onclick="showPage('standings')">📊 积分榜</button>
+            <button class="nav-btn" onclick="showPage('teams')">🏟️ 球队</button>
+            <button class="nav-btn" onclick="showPage('matches')">⚽ 比赛录入</button>
+            <button class="nav-btn" onclick="showPage('schedule')">📅 赛程</button>
+            <button class="nav-btn" onclick="showPage('transfers')">💰 交易</button>
+            <button class="nav-btn" onclick="showPage('awards')">🏆 荣誉</button>
+            <button class="nav-btn" onclick="showPage('admin')">⚙️ 管理</button>
+        </div>
+    </nav>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 消息提示 -->
+        <div id="alert-success" class="alert alert-success"></div>
+        <div id="alert-error" class="alert alert-error"></div>
+
+        <!-- 积分榜页面 -->
+        <div id="standings" class="page active">
+            <div class="card">
+                <h2 class="card-title">📊 联赛积分榜</h2>
+                <div class="form-group" style="max-width: 200px;">
+                    <label>选择级别</label>
+                    <select id="league-level-filter" onchange="loadStandings()">
+                        <option value="超级">超级联赛</option>
+                        <option value="甲级">甲级联赛</option>
+                        <option value="乙级">乙级联赛</option>
+                    </select>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>球队</th>
+                            <th>教练</th>
+                            <th>场次</th>
+                            <th>胜</th>
+                            <th>平</th>
+                            <th>负</th>
+                            <th>进球</th>
+                            <th>失球</th>
+                            <th>净胜</th>
+                            <th>积分</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standings-body"></tbody>
+                </table>
+            </div>
+
+            <div class="grid-3">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-teams">-</div>
+                    <div class="stat-label">参赛球队</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-matches">-</div>
+                    <div class="stat-label">已赛场次</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-goals">-</div>
+                    <div class="stat-label">总进球数</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 球队页面 -->
+        <div id="teams" class="page">
+            <div class="card">
+                <h2 class="card-title">🏟️ 球队列表</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="text" id="team-search" placeholder="搜索球队或教练..." oninput="filterTeams()">
+                    </div>
+                    <div class="form-group">
+                        <select id="team-level-filter" onchange="filterTeams()">
+                            <option value="">全部级别</option>
+                            <option value="超级">超级联赛</option>
+                            <option value="甲级">甲级联赛</option>
+                            <option value="乙级">乙级联赛</option>
+                        </select>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>球队</th>
+                            <th>教练</th>
+                            <th>级别</th>
+                            <th>评级</th>
+                            <th>冠军</th>
+                            <th>加入时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teams-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 比赛录入页面 -->
+        <div id="matches" class="page">
+            <div class="grid-2">
+                <div class="card">
+                    <h2 class="card-title">⚽ 录入比赛结果</h2>
+                    <form onsubmit="submitMatch(event)">
+                        <div class="form-group">
+                            <label>比赛类型</label>
+                            <select id="match-type">
+                                <option value="league">联赛</option>
+                                <option value="cup">杯赛</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>轮次</label>
+                            <input type="number" id="match-round" min="1" placeholder="例如：1">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>主队</label>
+                                <select id="match-home" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>客队</label>
+                                <select id="match-away" required></select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>主队比分</label>
+                                <input type="number" id="match-home-score" required min="0" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label>客队比分</label>
+                                <input type="number" id="match-away-score" required min="0" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>比赛日期</label>
+                            <input type="date" id="match-date">
+                        </div>
+                        <button type="submit" class="btn btn-block">提交比赛结果</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">📝 最近比赛</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>轮次</th>
+                                <th>对阵</th>
+                                <th>比分</th>
+                                <th>日期</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-matches-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 赛程页面 -->
+        <div id="schedule" class="page">
+            <div class="card">
+                <h2 class="card-title">📅 联赛赛程</h2>
+                <div class="form-group" style="max-width: 200px;">
+                    <label>筛选轮次</label>
+                    <select id="schedule-round-filter" onchange="loadSchedule()">
+                        <option value="">全部轮次</option>
+                    </select>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>轮次</th>
+                            <th>比赛日期</th>
+                            <th>主队</th>
+                            <th>比分</th>
+                            <th>客队</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 交易页面 -->
+        <div id="transfers" class="page">
+            <div class="grid-2">
+                <div class="card">
+                    <h2 class="card-title">💰 提交交易申请</h2>
+                    <form onsubmit="submitTransfer(event)">
+                        <div class="form-group">
+                            <label>球员姓名</label>
+                            <input type="text" id="transfer-player" required placeholder="球员名字">
+                        </div>
+                        <div class="form-group">
+                            <label>位置</label>
+                            <select id="transfer-position">
+                                <option value="">选择位置</option>
+                                <option value="前锋">前锋</option>
+                                <option value="中场">中场</option>
+                                <option value="后卫">后卫</option>
+                                <option value="门将">门将</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>转出球队</label>
+                                <select id="transfer-from" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label>转入球队</label>
+                                <select id="transfer-to" required></select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>交易类型</label>
+                            <select id="transfer-type" required>
+                                <option value="">选择类型</option>
+                                <option value="买卖">买卖</option>
+                                <option value="交换">交换</option>
+                                <option value="自由签约">自由签约</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>交易金额</label>
+                            <input type="number" id="transfer-amount" placeholder="可选">
+                        </div>
+                        <button type="submit" class="btn btn-block">提交交易申请</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">📋 交易记录</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>球员</th>
+                                <th>转出</th>
+                                <th>转入</th>
+                                <th>类型</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transfers-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 荣誉页面 -->
+        <div id="awards" class="page">
+            <div class="card">
+                <h2 class="card-title">🏆 冠军荣誉榜</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>教练</th>
+                            <th>球队</th>
+                            <th>冠军数量</th>
+                            <th>荣誉详情</th>
+                        </tr>
+                    </thead>
+                    <tbody id="awards-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 管理页面 -->
+        <div id="admin" class="page">
+            <div class="grid-2">
+                <div class="card">
+                    <h2 class="card-title">⚙️ 数据管理</h2>
+                    <button class="btn btn-block" onclick="exportData()" style="margin-bottom: 1rem;">📤 导出数据</button>
+                    <input type="file" id="import-file" accept=".json" style="margin-bottom: 1rem;">
+                    <button class="btn btn-block btn-secondary" onclick="importData()">📥 导入数据</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">🔧 系统设置</h2>
+                    <div class="form-group">
+                        <label>当前级别</label>
+                        <select id="current-level">
+                            <option value="超级">超级联赛</option>
+                            <option value="甲级">甲级联赛</option>
+                            <option value="乙级">乙级联赛</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-block" onclick="saveSettings()">保存设置</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">📊 统计信息</h2>
+                    <div id="admin-stats"></div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">🗑️ 危险操作</h2>
+                    <button class="btn btn-block btn-danger" onclick="clearAllData()">清空所有数据</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面切换
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            event.target.classList.add('active');
+            loadPageData(pageId);
+        }
+
+        // 加载页面数据
+        function loadPageData(pageId) {
+            switch(pageId) {
+                case 'standings': loadStandings(); break;
+                case 'teams': loadTeams(); break;
+                case 'matches': loadMatchForm(); break;
+                case 'schedule': loadSchedule(); break;
+                case 'transfers': loadTransfers(); break;
+                case 'awards': loadAwards(); break;
+                case 'admin': loadAdminStats(); break;
+            }
+        }
+
+        // 加载积分榜
+        function loadStandings() {
+            const level = document.getElementById('league-level-filter').value;
+            // TODO: 从后端加载数据
+            console.log('Loading standings for:', level);
+        }
+
+        // 加载球队
+        function loadTeams() {
+            // TODO: 从后端加载数据
+        }
+
+        function filterTeams() {
+            // TODO: 筛选球队
+        }
+
+        // 加载比赛表单
+        function loadMatchForm() {
+            // TODO: 加载球队选择
+        }
+
+        // 提交比赛
+        function submitMatch(e) {
+            e.preventDefault();
+            // TODO: 提交比赛数据
+            showAlert('success', '比赛结果已提交！');
+        }
+
+        // 加载赛程
+        function loadSchedule() {
+            // TODO: 加载赛程
+        }
+
+        // 加载交易
+        function loadTransfers() {
+            // TODO: 加载交易记录
+        }
+
+        // 提交交易
+        function submitTransfer(e) {
+            e.preventDefault();
+            // TODO: 提交交易申请
+            showAlert('success', '交易申请已提交！');
+        }
+
+        // 加载荣誉榜
+        function loadAwards() {
+            // TODO: 加载荣誉数据
+        }
+
+        // 加载管理统计
+        function loadAdminStats() {
+            // TODO: 加载统计数据
+        }
+
+        // 导出数据
+        function exportData() {
+            // TODO: 导出数据
+            showAlert('success', '数据已导出！');
+        }
+
+        // 导入数据
+        function importData() {
+            // TODO: 导入数据
+            showAlert('success', '数据已导入！');
+        }
+
+        // 保存设置
+        function saveSettings() {
+            showAlert('success', '设置已保存！');
+        }
+
+        // 清空数据
+        function clearAllData() {
+            if(confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                // TODO: 清空数据
+                showAlert('success', '数据已清空！');
+            }
+        }
+
+        // 显示消息
+        function showAlert(type, message) {
+            const alertId = type === 'success' ? 'alert-success' : 'alert-error';
+            const alert = document.getElementById(alertId);
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 3000);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPageData('standings');
+        });
+    </script>
+</body>
+</html>
