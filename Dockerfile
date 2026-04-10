@@ -11,4 +11,5 @@ RUN mkdir -p instance
 
 EXPOSE 5000
 
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "run:app"]
+# Railway 会自动设置 PORT 环境变量
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "30", "--workers", "2", "run:app"]

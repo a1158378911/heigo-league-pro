@@ -2,7 +2,7 @@
 HEIGO 足球经理联赛管理系统 - 主应用
 """
 import os
-from flask import Flask, Blueprint, send_from_directory
+from flask import Flask, Blueprint, send_from_directory, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_cors import CORS
@@ -13,6 +13,9 @@ login_manager = LoginManager()
 login_manager.login_view = 'admin_login'
 
 def create_app():
+    import sys
+    print("Creating Flask app...", file=sys.stderr)
+    
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'heigo-league-secret-2024')
     
@@ -20,10 +23,12 @@ def create_app():
     database_url = os.environ.get('DATABASE_URL')
     if database_url:
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+        print(f"Using PostgreSQL database", file=sys.stderr)
     else:
         # 本地开发使用 SQLite
         db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'heigo_league.db')
         app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+        print(f"Using SQLite database: {db_path}", file=sys.stderr)
     
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -42,6 +47,10 @@ def create_app():
     def index():
         return send_from_directory('.', 'index.html')
     
+    @main_bp.route('/health')
+    def health():
+        return jsonify({'status': 'healthy'}), 200
+    
     @login_manager.user_loader
     def load_user(user_id):
         return Admin.query.get(int(user_id))
@@ -52,6 +61,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        print("Database tables created", file=sys.stderr)
         
         # 创建默认管理员（仅当使用 SQLite 时）
         if not database_url:
@@ -62,5 +72,7 @@ def create_app():
                 )
                 db.session.add(admin)
                 db.session.commit()
+                print("Default admin created", file=sys.stderr)
 
+    print("Flask app created successfully!", file=sys.stderr)
     return app
