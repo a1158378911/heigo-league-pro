@@ -8,4 +8,4 @@ cmds = ["pip install -r requirements.txt"]
 cmds = ["echo 'Build complete'"]
 
 [phases.start]
-cmds = ["python3 app_simple.py"]
+cmds = ["python3 app_railway.py"]
