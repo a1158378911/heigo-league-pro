@@ -8,4 +8,5 @@ cmds = ["pip install -r requirements.txt"]
 cmds = ["echo 'Build complete'"]
 
 [phases.start]
-cmds = ["python3 app_railway.py"]
+# 使用 Gunicorn 生产服务器，配置健康检查
+cmds = ["gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --access-logfile - --timeout 30 app_prod:create_app()"]
