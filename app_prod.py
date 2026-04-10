@@ -249,43 +249,48 @@ def get_stats():
 
 def init_db():
     """初始化数据库"""
-    logger.info('Initializing database...')
-    with app.app_context():
-        db.create_all()
-        
-        if Team.query.count() == 0:
-            logger.info('Creating sample data...')
-            teams = [
-                Team(name='托特纳姆热刺', coach_name='MagicChicken', league_level='超级'),
-                Team(name='拜仁慕尼黑', coach_name='CoachWang', league_level='甲级'),
-                Team(name='AC 米兰', coach_name='ItalianCoach', league_level='甲级'),
-                Team(name='利物浦', coach_name='KlopFan', league_level='超级'),
-            ]
-            db.session.add_all(teams)
+    try:
+        logger.info('Initializing database...')
+        with app.app_context():
+            db.create_all()
             
-            coaches = [
-                Coach(game_id='MagicChicken', club_name='托特纳姆热刺', league_level='超级', rating='S', stars=5),
-                Coach(game_id='CoachWang', club_name='拜仁慕尼黑', league_level='甲级', rating='A', stars=3),
-            ]
-            db.session.add_all(coaches)
-            db.session.commit()
-            logger.info('✅ Sample data created')
-        else:
-            logger.info(f'Database already initialized with {Team.query.count()} teams')
+            if Team.query.count() == 0:
+                logger.info('Creating sample data...')
+                teams = [
+                    Team(name='托特纳姆热刺', coach_name='MagicChicken', league_level='超级'),
+                    Team(name='拜仁慕尼黑', coach_name='CoachWang', league_level='甲级'),
+                    Team(name='AC 米兰', coach_name='ItalianCoach', league_level='甲级'),
+                    Team(name='利物浦', coach_name='KlopFan', league_level='超级'),
+                ]
+                db.session.add_all(teams)
+                
+                coaches = [
+                    Coach(game_id='MagicChicken', club_name='托特纳姆热刺', league_level='超级', rating='S', stars=5),
+                    Coach(game_id='CoachWang', club_name='拜仁慕尼黑', league_level='甲级', rating='A', stars=3),
+                ]
+                db.session.add_all(coaches)
+                db.session.commit()
+                logger.info('✅ Sample data created')
+            else:
+                logger.info(f'Database already initialized with {Team.query.count()} teams')
+    except Exception as e:
+        logger.error(f'Database initialization error: {e}')
+
+
+# 在模块加载时初始化数据库
+init_db()
 
 
 # ==================== 生产环境入口 ====================
 
 def create_app():
     """应用工厂函数 - Gunicorn 使用"""
-    init_db()
     logger.info(f'HEIGO League System starting on port {PORT}')
     return app
 
 
 if __name__ == '__main__':
     # 本地开发使用
-    init_db()
     logger.info(f'🚀 HEIGO 联赛管理系统启动中...')
     logger.info(f'🌐 访问地址：http://0.0.0.0:{PORT}')
     logger.info(f'🔍 健康检查：http://0.0.0.0:{PORT}/health')
