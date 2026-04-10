@@ -9,7 +9,6 @@ COPY . .
 
 RUN mkdir -p instance
 
-EXPOSE 5000
-
-# Railway 会自动设置 PORT 环境变量
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "30", "--workers", "2", "run:app"]
+# Railway 会使用 PORT 环境变量，默认 5000
+# Gunicorn 会监听 $PORT 端口
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT --timeout 30 --workers 2 run:app"]
