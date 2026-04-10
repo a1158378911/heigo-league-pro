@@ -3,21 +3,19 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "api/index.py"
-    },
-    {
       "src": "/(.*)",
-      "dest": "index.html"
+      "dest": "api/index.py"
     }
   ],
   "env": {
-    "SECRET_KEY": "heigo-secret-2024",
-    "PYTHON_VERSION": "3.10.0"
+    "SECRET_KEY": "heigo-secret-2024"
   }
 }

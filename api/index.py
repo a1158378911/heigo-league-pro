@@ -1,5 +1,5 @@
 """
-HEIGO 足球经理联赛管理系统 - Vercel 部署版本
+HEIGO 足球经理联赛管理系统 - Vercel Serverless 版本
 """
 from flask import Flask, jsonify, request, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
@@ -11,16 +11,12 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 获取端口（Vercel 使用 PORT 环境变量）
-PORT = int(os.environ.get('PORT', 5000))
-
 # 创建应用
 app = Flask(__name__, static_folder='.', static_url_path='')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'heigo-secret-2024')
 
-# 数据库配置 - 使用 SQLite
-db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'heigo_league.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+# 数据库配置 - 使用内存 SQLite（Vercel Serverless 不支持持久化存储）
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -116,21 +112,28 @@ class Coach(db.Model):
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    return jsonify({
+        'status': 'ok',
+        'message': 'HEIGO 联赛管理系统 API',
+        'endpoints': [
+            '/api/standings',
+            '/api/teams',
+            '/api/matches',
+            '/api/transfers',
+            '/api/coaches',
+            '/api/stats'
+        ]
+    })
 
 
 @app.route('/health')
 def health():
-    return jsonify({'status': 'healthy', 'port': PORT}), 200
+    return jsonify({'status': 'healthy'}), 200
 
 
 @app.route('/ready')
 def ready():
-    try:
-        Team.query.first()
-        return jsonify({'ready': True}), 200
-    except Exception as e:
-        return jsonify({'ready': False, 'error': str(e)}), 500
+    return jsonify({'ready': True}), 200
 
 
 @app.route('/api/standings')
@@ -264,6 +267,6 @@ def init_db():
 init_db()
 
 
-# Vercel 入口
+# Vercel Serverless 入口
 def handler(request):
     return app(request.environ, lambda *args: None)
