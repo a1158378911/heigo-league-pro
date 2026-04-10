@@ -2,7 +2,7 @@
 HEIGO 足球经理联赛管理系统 - 主应用
 """
 import os
-from flask import Flask
+from flask import Flask, Blueprint, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_cors import CORS
@@ -23,7 +23,10 @@ def create_app():
         else:
             app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/heigo_league.db'
+        # 使用绝对路径
+        instance_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'instance')
+        os.makedirs(instance_dir, exist_ok=True)
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{instance_dir}/heigo_league.db'
     
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -36,14 +39,11 @@ def create_app():
     from .admin_routes import admin_bp
     
     # 创建主路由 Blueprint
-    from flask import Blueprint, send_from_directory
-    import os
-    
     main_bp = Blueprint('main_bp', __name__)
     
     @main_bp.route('/')
     def index():
-        return send_from_directory('.', 'index.html')
+        return send_from_directory(app.root_path, '../index.html')
     
     @login_manager.user_loader
     def load_user(user_id):
